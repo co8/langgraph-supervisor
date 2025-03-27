@@ -18,6 +18,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { MemorySaver, InMemoryStore } from "@langchain/langgraph";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 
 // Memory
 const checkpointer = new MemorySaver();
@@ -30,8 +31,8 @@ const stateThreadId = "751786846877";
 
 //const model = new ChatOpenAI({ modelName: "gpt-4o" });
 const model = new ChatOllama({
-  model: "mistral-small",
-  //model: "llama3.2:3b",
+  //model: "mistral-small",
+  model: "llama3.2:3b",
   temperature: 0,
   //verbose: true,
 });
@@ -55,25 +56,38 @@ const multiply = tool(async (args) => args.a * args.b, {
   }),
 });
 
+// const webSearch = tool(
+//   async (args) => {
+//     return (
+//       "Here are the headcounts for each of the FAANG companies in 2024:\n" +
+//       "1. **Facebook (Meta)**: 67,317 employees.\n" +
+//       "2. **Apple**: 164,000 employees.\n" +
+//       "3. **Amazon**: 1,551,000 employees.\n" +
+//       "4. **Netflix**: 14,000 employees.\n" +
+//       "5. **Google (Alphabet)**: 181,269 employees."
+//     );
+//   },
+//   {
+//     name: "web_search",
+//     description: "Search the web for information.",
+//     schema: z.object({
+//       query: z.string(),
+//     }),
+//   }
+// );
 const webSearch = tool(
   async (args) => {
-    return (
-      "Here are the headcounts for each of the FAANG companies in 2024:\n" +
-      "1. **Facebook (Meta)**: 67,317 employees.\n" +
-      "2. **Apple**: 164,000 employees.\n" +
-      "3. **Amazon**: 1,551,000 employees.\n" +
-      "4. **Netflix**: 14,000 employees.\n" +
-      "5. **Google (Alphabet)**: 181,269 employees."
-    );
+    return [new TavilySearchResults({ maxResults: 5 })];
   },
   {
     name: "web_search",
-    description: "Search the web for information.",
+    description: "Search the web usign Tavily for information.",
     schema: z.object({
       query: z.string(),
     }),
   }
 );
+//const webSearch = [new TavilySearchResults({ maxResults: 5 })];
 
 const mathAgent = createReactAgent({
   llm: model,
